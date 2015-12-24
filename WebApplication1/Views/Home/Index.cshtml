@@ -1,0 +1,216 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    td.details-control {
+        background: url('../Content/images/details_open.png') no-repeat center center;
+        cursor: pointer;
+    }
+
+    tr.details td.details-control {
+        background: url('../Content/images/details_close.png') no-repeat center center;
+    }
+    .jumbotron
+    {
+        display: none;
+    }
+</style>
+<script>
+    $(function () {
+        var machinelist = '@ViewData["machinelist"]';
+
+        @{
+            var serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+        }
+
+        var tt = @Html.Raw(serializer.Serialize(ViewData["machinelist"]));
+
+        var mem = _.memoize(function(obj){return obj;});
+
+        mem.cache.set('ttmem', tt);
+
+        //console.log(tt);
+        var obj = _.keys(tt);
+        
+        var totalarr = new Array();
+        for(var i=0; i < _.size(obj); i++)
+        {
+            var objarr = new Array();
+            
+            objarr.push(obj[i]);
+            _.forIn(tt[obj[i]], function(value, key)
+            {
+                if("name" == key || "location" == key 
+                    || "leaseuser" == key 
+                    || "status" == key
+                    )
+                objarr.push(value);
+            });
+            totalarr.push(objarr);
+        }       
+           
+        //var table = $('#example').
+        var dt = $('#example').DataTable({
+            'processing':true,
+            data: totalarr,
+            rowId: 3,
+            columns:[
+                {
+                    "class":"details-control",
+                    "orderable": false,
+                    "data":  null,
+                    "defaultContent": ""
+                },
+                {
+                    title: "Page Visited",
+                    className: 'employeevisit'
+                },
+                {
+                    title: "Time",
+                    className: 'visitedtime'
+                },
+                {
+                    title: "Page Visited",
+                    className: 'employeevisit'
+                },
+                {
+                    title: "Time",
+                    className: 'visitedtime'
+                },
+                {
+                    title: "Edit",
+                    data: null,
+                    className: "center",
+                    "render": function(data, type, row)
+                    {
+                        var machineId = row[3];
+                        return '<a href="/Home/MachineDetail/' + machineId + '" class="btn btn-info">Edit</a>';
+                    }    
+                }
+            ]
+
+        });
+        
+        $('#example').on('click', 'a.editor_edit', function (e) {
+            e.preventDefault();
+            var tr = $(this).closest('tr');
+            var row = dt.row( tr );
+            var idx = $.inArray( tr.attr('id'), detailRows );
+            var machineId = tr.attr('id');
+            //Ajax redirect
+            //
+            var MyAppUrlSettings =
+            {
+                MyUsefulUrl: '@Url.Action("MachineDetail", "Home")'
+            }
+
+            $.ajax({
+                type: 'POST',
+                url: MyAppUrlSettings.MyUsefulUrl,
+                data: {"machineId": machineId },
+                success: function(){
+                    alert('hello world');
+                },
+                dataType: JSON
+            });
+        } );
+        
+        var detailRows = [];
+
+        $('#example tbody').on( 'click', 'tr td.details-control', function () {
+            var tr = $(this).closest('tr');
+            var row = dt.row( tr );
+            var idx = $.inArray( tr.attr('id'), detailRows );
+ 
+            if ( row.child.isShown() ) {
+                tr.removeClass( 'details' );
+                row.child.hide();
+
+                detailRows.splice( idx, 1 );
+            }
+            else {
+                tr.addClass( 'details' );
+                //var rdata = format(row.data());
+                var rdata = dformat(row.data());
+                row.child(rdata).show();
+ 
+                if ( idx === -1 ) {
+                    detailRows.push( tr.attr('id') );
+                }
+            }
+        } );
+
+
+        var dformat = (function(d)
+        {
+            var ss = @Html.Raw(serializer.Serialize(ViewData["machinelist"]));
+            var str = 
+            'Sockets: '+ ss[d[0]]["resources"].sockets +'<br/>'+
+            'Cores: '+ ss[d[0]]["resources"].cores + '<br />'+
+            'Processor: '+ ss[d[0]]["resources"].cpus + '<br />'+
+            'Memory: '+ ss[d[0]]["resources"].memory + '<br />'+
+            'Disks: ' + ss[d[0]]["resources"].disks + '<br />';        
+            var noofdisks = parseInt(ss[d[0]]["resources"].disks);
+            for(var i=0; i < noofdisks ; i++)
+            {
+                var diskstr = "Disk" + _(i+1).toString() + ": " + ss[d[0]]["resources"]["disk" + _(i+1).toString()] + "<br/>";
+                str += diskstr;
+            }
+            return str;
+        });
+
+        dt.on( 'draw', function () {
+            $.each( detailRows, function ( i, id ) {
+                $('#'+id+' td.details-control').trigger( 'click' );
+            } );
+        } );
+
+
+
+        function getdiskinfo(res, diskno)
+        {
+            var returnstr;
+            for(var i=0; i < diskno; i++)
+            {
+                var str = "Disk" + i + ": " + res["resource"]["disk" + i] + "<br />";
+                returnstr += str;
+            }
+            return returnstr;
+        }
+
+    });
+</script>
+
+
+<div class="jumbotron">
+    <h1>ASP.NET</h1>
+    <p class="lead">ASP.NET is a free web framework for building great Web sites and Web applications using HTML, CSS and JavaScript.</p>
+    <p><a href="http://asp.net" class="btn btn-primary btn-large">Learn more &raquo;</a></p>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <table id="example" border="1"></table>
+
+    </div>
+    <div class="col-md-4">
+        <h2>Getting started</h2>
+        <p>
+            ASP.NET MVC gives you a powerful, patterns-based way to build dynamic websites that
+            enables a clean separation of concerns and gives you full control over markup
+            for enjoyable, agile development.
+        </p>
+        <p><a class="btn btn-default" href="http://go.microsoft.com/fwlink/?LinkId=301865">Learn more &raquo;</a></p>
+    </div>
+    <div class="col-md-4">
+        <h2>Get more libraries</h2>
+        <p>NuGet is a free Visual Studio extension that makes it easy to add, remove, and update libraries and tools in Visual Studio projects.</p>
+        <p><a class="btn btn-default" href="http://go.microsoft.com/fwlink/?LinkId=301866">Learn more &raquo;</a></p>
+    </div>
+    <div class="col-md-4">
+        <h2>Web Hosting</h2>
+        <p>You can easily find a web hosting company that offers the right mix of features and price for your applications.</p>
+        <p><a class="btn btn-default" href="http://go.microsoft.com/fwlink/?LinkId=301867">Learn more &raquo;</a></p>
+    </div>
+</div>
