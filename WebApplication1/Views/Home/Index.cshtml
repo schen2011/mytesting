@@ -41,8 +41,11 @@
             objarr.push(obj[i]);
             _.forIn(tt[obj[i]], function(value, key)
             {
-                if("name" == key || "location" == key 
+                if("broken" == key 
                     || "leaseuser" == key 
+                    || "location" == key 
+                    || "name" == key 
+                    || "site" == key
                     || "status" == key
                     )
                 objarr.push(value);
@@ -63,19 +66,27 @@
                     "defaultContent": ""
                 },
                 {
-                    title: "Page Visited",
+                    title: "Machine Name",
                     className: 'employeevisit'
                 },
                 {
-                    title: "Time",
+                    title: "Site",
                     className: 'visitedtime'
                 },
                 {
-                    title: "Page Visited",
+                    title: "Location",
+                    className: 'visitedtime'
+                },
+                {
+                    title: "Lease User",
                     className: 'employeevisit'
                 },
                 {
-                    title: "Time",
+                    title: "Status",
+                    className: 'visitedtime'
+                },
+                {
+                    title: "Broken",
                     className: 'visitedtime'
                 },
                 {
@@ -84,37 +95,59 @@
                     className: "center",
                     "render": function(data, type, row)
                     {
-                        var machineId = row[3];
+                        var machineId = row[4];
                         return '<a href="/Home/MachineDetail/' + machineId + '" class="btn btn-info">Edit</a>';
                     }    
                 }
-            ]
-
-        });
-        
-        $('#example').on('click', 'a.editor_edit', function (e) {
-            e.preventDefault();
-            var tr = $(this).closest('tr');
-            var row = dt.row( tr );
-            var idx = $.inArray( tr.attr('id'), detailRows );
-            var machineId = tr.attr('id');
-            //Ajax redirect
+            ],
             //
-            var MyAppUrlSettings =
-            {
-                MyUsefulUrl: '@Url.Action("MachineDetail", "Home")'
-            }
+            //1. broken
+            //2. leasueruser
+            //3. location
+            //4. machinename
 
-            $.ajax({
-                type: 'POST',
-                url: MyAppUrlSettings.MyUsefulUrl,
-                data: {"machineId": machineId },
-                success: function(){
-                    alert('hello world');
+            //5. site
+            //6. status
+
+            "columnDefs": [
+            {
+                "render": function (data, type, row) {
+                    return row[4];
                 },
-                dataType: JSON
-            });
-        } );
+                "targets": 1
+            },
+            {
+                "render": function (data, type, row) {
+                    return row[5];
+                },
+                "targets": 2
+            },
+            {
+                "render": function (data, type, row) {
+                    return row[3];
+                },
+                "targets": 3
+            },
+            {
+                "render": function (data, type, row) {
+                    return row[2];
+                },
+                "targets": 4
+            },
+            {
+                "render": function (data, type, row) {
+                    return row[6];
+                },
+                "targets": 5
+            },
+            {
+                "render": function (data, type, row) {
+                    return row[1];
+                },
+                "targets": 6
+            }
+            ]
+        });
         
         var detailRows = [];
 
@@ -131,7 +164,6 @@
             }
             else {
                 tr.addClass( 'details' );
-                //var rdata = format(row.data());
                 var rdata = dformat(row.data());
                 row.child(rdata).show();
  
@@ -140,8 +172,28 @@
                 }
             }
         } );
+        /*
+        $('#example thead th').each( function (index) {
+            if(index > 0){
+                var title = $(this).text();
+                $(this).html( '<input  type="text" placeholder="Search '+ title +'" />' );
+            }
+        } );
 
+        var table = $('#example').DataTable();
 
+        table.columns().every( function () {
+            var that = this;
+ 
+            $( 'input', this.header() ).on( 'keyup change', function () {
+                if ( that.search() !== this.value ) {
+                    that
+                        .search( this.value )
+                        .draw();
+                }
+            } );
+        } );
+        */
         var dformat = (function(d)
         {
             var ss = @Html.Raw(serializer.Serialize(ViewData["machinelist"]));
@@ -190,8 +242,10 @@
 </div>
 
 <div class="row">
-    <div class="col-lg-12">
-        <table id="example" border="1"></table>
+    <div class="col-lg-10">
+        <table id="example" border="1" class="table table-striped table-hover table-condensed ">
+
+        </table>
 
     </div>
     <div class="col-md-4">
