@@ -15,80 +15,111 @@
 </body>
 
     <script>
-        $(document).ready(function () {
+        $(function () {
 
-
-            var employees = [
-                { "EmployeeID": "NKG", "FirstName": "Nancy", "LastName": "Davolio", "ReportsTo": null, "Country": "USA"},
-                { "EmployeeID": 2, "FirstName": "Andrew", "LastName": "Fuller", "ReportsTo": "NKG", "Country": "USA"},
-                { "EmployeeID": 3, "FirstName": "Janet", "LastName": "Leverling", "ReportsTo": "NKG", "Country": "USA"},
-                { "EmployeeID": 4, "FirstName": "Margaret", "LastName": "Peacock", "ReportsTo": null, "Country": "USA"},
-            ];
-            // prepare the data
-            var source =
-            {
+            $.ajax({
+                type: "get",
+                url: "../../Home/GetData",
+                contentType: "application/json",
                 dataType: "json",
-                dataFields: [
-                    { name: 'EmployeeID', type: 'number' },
-                    { name: 'ReportsTo', type: 'number' },
-                    { name: 'FirstName', type: 'string' },
-                    { name: 'LastName', type: 'string' },
-                    { name: 'Country', type: 'string' }
-                ],
-                hierarchy:
-                {
-                    keyDataField: { name: 'EmployeeID' },
-                    parentDataField: { name: 'ReportsTo' }
-                },
-                id: 'EmployeeID',
-                localData: employees
-            };
-            var dataAdapter = new $.jqx.dataAdapter(source);
-            // create Tree Grid
-            $("#treeGrid").jqxTreeGrid(
-            {   /*
-                width: 850,
-                source: dataAdapter,
-                sortable: true,
-                */
-                width: 850,
-                source: dataAdapter,
-                pageable: true,
-                columnsResize: true,
-                sortable: true,
-                filterable: true,
-                filterMode: 'advanced',
-
-                ready: function () {
-                    $("#treeGrid").jqxTreeGrid('expandRow', '2');
-                },
-                columns: [
-                  { text: 'FirstName', columnGroup: 'Name', dataField: 'FirstName', width: 200 },
-                  { text: 'LastName', columnGroup: 'Name', dataField: 'LastName', width: 200 },
-                  { text: 'ReportsTo', dataField: 'ReportsTo', width: 200 },
-                  { text: 'Country', dataField: 'Country' }
-                ],
-                columnGroups: [
-                  { text: 'Name', name: 'Name' }
-                ]
+                success: function (data) { treegrid(data) },
+                failure: function (response) {
+                    alert(response.d);
+                }
             });
 
 
-            var table = $('#example').DataTable();
 
-            table.columns().every(function () {
-                var that = this;
+            // prepare the data
+            var treegrid = function (data) {
+                var machines = [];
+                var machineid = 0;
+                _.forEach(data, function (n, keys) {
+                    var row = { "sitename": n.site, "machinename": n.name, "leaseuser": n.leaseuser };
 
-                $('input', this.header()).on('keyup change', function () {
-                    if (that.search() !== this.value) {
-                        that
-                            .search(this.value)
-                            .draw();
-                    }
+                    machines.push(row);
                 });
-            });
 
 
+                
+                var sitemachines = _.groupBy(data, 'site');
+
+                var ms = [];
+                _.forEach(sitemachines, function (n, key) {
+
+                    var available = _.size(n) - _.size(_.countBy(n, { "leaseto": null }));
+                    var site = { "sitename": key, "machinename": null, "machineid": key + "0", "leaseuser": available, "parentmachineid": key};
+                    ms.push(site);
+                    var counter = 1;
+                    _.forEach(n, function (n, key) {
+
+                        if (null == n.leaseuser)
+                        {
+                            n.leaseuser = "idle";
+                        }
+                        var mss = {
+                            "sitename": null, "machinename": n.name, "leaseuser": n.leaseuser,
+                            "parentmachineid": n.site + "0", "machineid": n.site + counter
+                        };
+                        counter++;
+                        ms.push(mss);
+                    });
+                });
+                
+                var machines = [
+                    { "machinename": "", "sitename": "FTL", "leaseuser": null, "machineid":"adsds" },
+                    { "machinename": "3R93-01", "sitename": "adsds", "leaseuser": null, "machineid": null},
+                    { "machinename": "3R93-012", "sitename": "adsds", "leaseuser": "stephench", "machineid": null},
+                    { "machinename": "NKG01", "sitename": "NKG", "leaseuser": null, "machineid": null}
+                ];
+                
+
+                var source =
+                {
+                    dataType: "json",
+                    dataFields: [
+                        { name: 'sitename', type: 'string' },
+                        { name: 'machinename', type: 'string' },
+                        { name: 'leaseuser', type: 'string' },
+                        { name: 'parentId', type: 'string' },
+                        { name: 'parentmachineid', type: 'string' },
+                        { name: "machineid", type: 'string' }
+                    ],
+                    hierarchy:
+                    {
+                        keyDataField: { name: 'machineid' },
+                        parentDataField: { name: 'parentmachineid' }
+                    },
+                    id: 'machinename',
+                    localData: ms
+                };
+                var dataAdapter = new $.jqx.dataAdapter(source);
+                // create Tree Grid
+                $("#treeGrid").jqxTreeGrid(
+                {
+                    width: 300,
+                    source: dataAdapter,
+                    columnsResize: true,
+                    sortable: true,
+                    filterable: true,
+                    altRows: true,
+                    ready: function () {
+                        $("#treeGrid").jqxTreeGrid('expandRow', '1');
+                        $("#treeGrid").jqxTreeGrid('expandRow', '2');
+                        $("#treeGrid").jqxTreeGrid('selectRow', '2');
+
+                        $("#treeGrid").jqxTreeGrid('focus');
+                        $("#treeGrid tr").on('click', function (event) {
+                            alert($(event.target).text());
+                        });
+                    },
+                    columns: [
+                          { text: 'Site', dataField: 'sitename', width: 100 },
+                          { text: 'Machine', dataField: 'machinename', width: 100 },
+                          { text: 'Status', dataField: 'leaseuser', width: 100 }
+                    ]
+                });
+            }
             /*
 
             $.ajax({

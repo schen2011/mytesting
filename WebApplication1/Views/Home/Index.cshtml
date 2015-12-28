@@ -176,16 +176,21 @@
         $('#example thead th').each( function (index) {
             if(index > 0){
                 var title = $(this).text();
-                $(this).html( '<input  type="text" placeholder="Search '+ title +'" />' );
+                $(this).html( '<input  type="text" placeholder="Search '+ title +'" class="filterbox" />' );
             }
         } );
+
+        $(".filterbox").click(function(event){
+            event.preventDefault();
+        });
 
         var table = $('#example').DataTable();
 
         table.columns().every( function () {
             var that = this;
  
-            $( 'input', this.header() ).on( 'keyup change', function () {
+            $( 'input', this.header() ).on( 'keyup change', function (event) {
+
                 if ( that.search() !== this.value ) {
                     that
                         .search( this.value )
