@@ -1,163 +1,127 @@
 ﻿$(function () {
-    var machinelist = '@ViewData["machinelist"]';
 
-    @{
-        var serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
-    }
-
-    var tt = @Html.Raw(serializer.Serialize(ViewData["machinelist"]));
-
-    var mem = _.memoize(function(obj){return obj;});
-
-    mem.cache.set('ttmem', tt);
-
-    //console.log(tt);
-    var obj = _.keys(tt);
-        
-    var totalarr = new Array();
-    for(var i=0; i < _.size(obj); i++)
-    {
-        var objarr = new Array();
-            
-        objarr.push(obj[i]);
-        _.forIn(tt[obj[i]], function(value, key)
-        {
-            if("name" == key || "location" == key 
-                || "leaseuser" == key 
-                || "status" == key
-                )
-                objarr.push(value);
-        });
-        totalarr.push(objarr);
-    }       
-           
-    //var table = $('#example').
-    var dt = $('#example').DataTable({
-        'processing':true,
-        data: totalarr,
-        rowId: 3,
-        columns:[
-            {
-                "class":"details-control",
-                "orderable": false,
-                "data":  null,
-                "defaultContent": ""
-            },
-            {
-                title: "Page Visited",
-                className: 'employeevisit'
-            },
-            {
-                title: "Time",
-                className: 'visitedtime'
-            },
-            {
-                title: "Page Visited",
-                className: 'employeevisit'
-            },
-            {
-                title: "Time",
-                className: 'visitedtime'
-            },
-            {
-                title: "Edit",
-                data: null,
-                className: "center",
-                "render": function(data, type, row)
-                {
-                    var machineId = row[3];
-                    return '<a href="/Home/MachineDetail/' + machineId + '" class="btn btn-info">Edit</a>';
-                }    
-            }
-        ]
-
+    $.ajax({
+        type: "get",
+        url: "../../Home/GetData",
+        contentType: "application/json",
+        dataType: "json",
+        success: function (data) { treegrid(data) },
+        failure: function (response) {
+            alert(response.d);
+        }
     });
-        
-    $('#example').on('click', 'a.editor_edit', function (e) {
-        e.preventDefault();
-        var tr = $(this).closest('tr');
-        var row = dt.row( tr );
-        var idx = $.inArray( tr.attr('id'), detailRows );
-        var machineId = tr.attr('id');
-        //Ajax redirect
-        //
-        var MyAppUrlSettings =
-        {
-            MyUsefulUrl: '@Url.Action("MachineDetail", "Home")'
-        }
+    // prepare the data
+    var treegrid = function (data) {
+        var machines = [];
+        var machineid = 0;
+        _.forEach(data, function (n, keys) {
+            var row = { "sitename": n.site, "machinename": n.name, "leaseuser": n.leaseuser };
 
-        $.ajax({
-            type: 'POST',
-            url: MyAppUrlSettings.MyUsefulUrl,
-            data: {"machineId": machineId },
-            success: function(){
-                alert('hello world');
-            },
-            dataType: JSON
+            machines.push(row);
         });
-    } );
-        
-    var detailRows = [];
+        var sitemachines = _.groupBy(data, 'site');
+        var ms = [];
+        _.forEach(sitemachines, function (n, key) {
 
-    $('#example tbody').on( 'click', 'tr td.details-control', function () {
-        var tr = $(this).closest('tr');
-        var row = dt.row( tr );
-        var idx = $.inArray( tr.attr('id'), detailRows );
- 
-        if ( row.child.isShown() ) {
-            tr.removeClass( 'details' );
-            row.child.hide();
+            var available = _.size(n) - _.size(_.countBy(n, { "leaseto": null }));
+            var site = { "sitename": key, "machinename": null, "machineid": key + "0", "leaseuser": available, "parentmachineid": key };
+            ms.push(site);
+            var counter = 1;
+            _.forEach(n, function (n, key) {
 
-            detailRows.splice( idx, 1 );
-        }
-        else {
-            tr.addClass( 'details' );
-            //var rdata = format(row.data());
-            var rdata = dformat(row.data());
-            row.child(rdata).show();
- 
-            if ( idx === -1 ) {
-                detailRows.push( tr.attr('id') );
-            }
-        }
-    } );
+                if (null == n.leaseuser) {
+                    n.leaseuser = "idle";
+                }
+                var mss = {
+                    "sitename": n.site, "machinename": n.name, "leaseuser": n.leaseuser,
+                    "parentmachineid": n.site + "0", "machineid": n.site + counter
+                };
+                counter++;
+                ms.push(mss);
+            });
+        });
+
+        var machines = [
+            { "machinename": "", "sitename": "FTL", "leaseuser": null, "machineid": "adsds" },
+            { "machinename": "3R93-01", "sitename": "adsds", "leaseuser": null, "machineid": null },
+            { "machinename": "3R93-012", "sitename": "adsds", "leaseuser": "stephench", "machineid": null },
+            { "machinename": "NKG01", "sitename": "NKG", "leaseuser": null, "machineid": null }
+        ];
 
 
-    var dformat = (function(d)
-    {
-        var ss = @Html.Raw(serializer.Serialize(ViewData["machinelist"]));
-        var str = 
-        'Sockets: '+ ss[d[0]]["resources"].sockets +'<br/>'+
-        'Cores: '+ ss[d[0]]["resources"].cores + '<br />'+
-        'Processor: '+ ss[d[0]]["resources"].cpus + '<br />'+
-        'Memory: '+ ss[d[0]]["resources"].memory + '<br />'+
-        'Disks: ' + ss[d[0]]["resources"].disks + '<br />';        
-        var noofdisks = parseInt(ss[d[0]]["resources"].disks);
-        for(var i=0; i < noofdisks ; i++)
+        var source =
         {
-            var diskstr = "Disk" + _(i+1).toString() + ": " + ss[d[0]]["resources"]["disk" + _(i+1).toString()] + "<br/>";
-            str += diskstr;
-        }
-        return str;
-    });
-
-    dt.on( 'draw', function () {
-        $.each( detailRows, function ( i, id ) {
-            $('#'+id+' td.details-control').trigger( 'click' );
-        } );
-    } );
-
-
-
-    function getdiskinfo(res, diskno)
-    {
-        var returnstr;
-        for(var i=0; i < diskno; i++)
+            dataType: "json",
+            dataFields: [
+                { name: 'sitename', type: 'string' },
+                { name: 'machinename', type: 'string' },
+                { name: 'leaseuser', type: 'string' },
+                { name: 'parentId', type: 'string' },
+                { name: 'parentmachineid', type: 'string' },
+                { name: "machineid", type: 'string' }
+            ],
+            hierarchy:
+            {
+                /*
+                groupingDataFields:
+                [
+                    {
+                        name: "sitename"
+                    }
+                ]
+                */
+                keyDataField: { name: 'machineid' },
+                parentDataField: { name: 'parentmachineid' }
+                
+            },
+            id: 'machinename',
+            localData: ms
+        };
+        var dataAdapter = new $.jqx.dataAdapter(source);
+        // create Tree Grid
+        $("#treeGrid").jqxTreeGrid(
         {
-            var str = "Disk" + i + ": " + res["resource"]["disk" + i] + "<br />";
-            returnstr += str;
-        }
-        return returnstr;
+            width: 300,
+            source: dataAdapter,
+            columnsResize: true,
+            sortable: true,
+            filterable: true,
+            filterMode: 'simple',
+            ready: function () {
+                $("#treeGrid").jqxTreeGrid('expandRow', '1');
+                $("#treeGrid").jqxTreeGrid('expandRow', '2');
+                $("#treeGrid").jqxTreeGrid('selectRow', '2');
+
+                $("#treeGrid").jqxTreeGrid('focus');
+                /*
+                $("#treeGrid tr").on('click', function (event) {
+                    alert($(event.target).text());
+                });
+                */
+            },
+            columns: [
+                  { text: 'Site', dataField: 'sitename',columnGroup: 'Name', width: 100, 'class': "hidden" },
+                  { text: 'Machine', dataField: 'machinename', columnGroup: 'Name', width: 100 },
+                  { text: 'Status', dataField: 'leaseuser', width: 100}
+            ],
+            columnGroups: [
+              { text: 'Name', name: 'Name' }
+            ]
+        });
+
+        $("#treeGrid").on('rowClick', function (event) {
+            var args = event.args;
+            var key = args.key;
+            var row = args.row;
+            console.log("One Click");
+        });
+
+        $("#treeGrid").on('rowDoubleClick', function (event) {
+            var args = event.args;
+            var key = args.key;
+            var row = args.row;
+            console.log("Double Click");
+            console.log(row.machinename);
+        });
     }
-
 });
