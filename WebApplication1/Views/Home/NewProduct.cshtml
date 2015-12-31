@@ -1,0 +1,47 @@
+﻿@{
+    ViewBag.Title = "NewProduct";
+}
+
+<h2>NewProduct</h2>
+
+<!doctype html>
+<html ng-app="app">
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+    <script src="~/Scripts/angularjs/components.js"></script>
+    <script src="~/Scripts/angularjs/app.js"></script>
+    <script src="~/Scripts/angularjs/app2.js"></script>
+    <link rel="stylesheet" href="bootstrap.css">
+    <title>Angular in DOTNET</title>
+</head>
+<body>
+    <tabs>
+        <pane title="Localization">
+            Date: {{ '2012-04-01' | date:'fullDate' }} <br>
+            Currency: {{ 123456 | currency }} <br>
+            Number: {{ 98765.4321 | number }} <br>
+        </pane>
+        <pane title="Pluralization">
+            <div ng-controller="BeerCounter">
+                <div ng-repeat="beerCount in beers">
+                    <ng-pluralize count="beerCount" when="beerForms"></ng-pluralize>
+                </div>
+            </div>
+        </pane>
+    </tabs>
+
+    <div ng-app ng-init="qty=1;cost=2">
+        <b>Invoice:</b>
+        <div>
+            Quantity: <input type="number" min="0" ng-model="qty">
+        </div>
+        <div>
+            Costs: <input type="number" min="0" ng-model="cost">
+        </div>
+        <div>
+            <b>Total:</b> {{qty * cost | currency}}
+        </div>
+    </div>
+
+</body>
+</html>
