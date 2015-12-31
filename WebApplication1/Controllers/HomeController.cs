@@ -48,6 +48,8 @@ namespace WebApplication1.Controllers
 
         public ActionResult MachineDetail(string Id)
         {
+            ViewBag.MachineName = Id;
+
             return View("About");
         }
 

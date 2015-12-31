@@ -11,6 +11,7 @@
     var opts = function () {
         return spinneroption
     }();
+
     spinner_div = $('#spinner').get(0);
 
     $.ajax({
@@ -34,11 +35,6 @@
             $.unblockUI();
         }
     });
-
-
-
-
-
 
     var buildtable = function (tt) {
 
@@ -117,7 +113,7 @@
                     "defaultContent": ""
                 },
                 {
-                    title: "Machine Name",
+                    title: "Machine",
                     className: 'employeevisit'
                 },
                 {
@@ -169,12 +165,12 @@
                     className: 'hiddenfield'
                 },
                 {
-                    title: "Edit",
+                    title: "Detail",
                     data: null,
                     className: "center",
                     "render": function (data, type, row) {
                         var machineId = row[4];
-                        return '<a href="/Home/MachineDetail/' + machineId + '" class="btn btn-info">Edit</a>';
+                        return '<a href="/Home/MachineDetail/' + machineId + '" class="btn btn-info">Detail</a>';
                     }
                 }
             ],
