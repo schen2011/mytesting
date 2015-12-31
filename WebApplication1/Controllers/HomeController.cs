@@ -82,9 +82,19 @@ namespace WebApplication1.Controllers
             return View();
         }
 
-        public string GetData()
+        public string GetData(string id)
         {
-            const string getmachineurl = "https://xenrt.citrite.net:443/xenrt/api/v2/machines";
+            string getmachineurl = "https://xenrt.citrite.net:443/xenrt/api/v2/machines";
+            
+            if(!String.IsNullOrEmpty(id))
+            {
+                StringBuilder st = new StringBuilder(getmachineurl);
+                st.Append("?");
+                st.Append("machine=");
+                st.Append(id);
+                getmachineurl = st.ToString();
+            }
+
             HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(getmachineurl);
             httpWebRequest.ContentType = "application/json";
             httpWebRequest.Headers.Add("X-Api-Key", "mx0hbgN97TSqTO/OxaAVuHtH+WpMoGbs5j71+g");
@@ -100,6 +110,64 @@ namespace WebApplication1.Controllers
                     return data;
                 }
             }
+        }
+
+        public string GetPowerStatus(string id)
+        {
+            string getpowerstatus = "https://xenrt.citrite.net:443/xenrt/api/v2/machine/{machinename}/power";
+
+            if (!String.IsNullOrEmpty(id))
+            {
+                StringBuilder st = new StringBuilder(getpowerstatus);
+                st.Replace("{machinename}", id);
+                getpowerstatus = st.ToString();
+
+                HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(getpowerstatus);
+                httpWebRequest.ContentType = "application/json";
+                httpWebRequest.Headers.Add("X-Api-Key", "mx0hbgN97TSqTO/OxaAVuHtH+WpMoGbs5j71+g");
+                httpWebRequest.Method = "GET";
+                httpWebRequest.Timeout = 20000;
+                using (var response = (HttpWebResponse)httpWebRequest.GetResponse())
+                {
+                    using (var reader = new StreamReader(response.GetResponseStream()))
+                    {
+                        JavaScriptSerializer js = new JavaScriptSerializer();
+                        var obj = js.Deserialize<dynamic>(reader.ReadToEnd());
+                        string data = JsonConvert.SerializeObject(obj);
+                        return data;
+                    }
+                }
+            }
+            return null;
+        }
+
+        public string GetJobHistroies(string id)
+        {
+            string getjobhistory = "https://xenrt.citrite.net:443/xenrt/api/v2/jobs?status=new%2Crunning%2Cdone%2Cremoved&machine={machinename}";
+
+            if (!String.IsNullOrEmpty(id))
+            {
+                StringBuilder st = new StringBuilder(getjobhistory);
+                st.Replace("{machinename}", id);
+                getjobhistory = st.ToString();
+
+                HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(getjobhistory);
+                httpWebRequest.ContentType = "application/json";
+                httpWebRequest.Headers.Add("X-Api-Key", "mx0hbgN97TSqTO/OxaAVuHtH+WpMoGbs5j71+g");
+                httpWebRequest.Method = "GET";
+                httpWebRequest.Timeout = 20000;
+                using (var response = (HttpWebResponse)httpWebRequest.GetResponse())
+                {
+                    using (var reader = new StreamReader(response.GetResponseStream()))
+                    {
+                        JavaScriptSerializer js = new JavaScriptSerializer();
+                        var obj = js.Deserialize<dynamic>(reader.ReadToEnd());
+                        string data = JsonConvert.SerializeObject(obj);
+                        return data;
+                    }
+                }
+            }
+            return null;
         }
     }
 }
