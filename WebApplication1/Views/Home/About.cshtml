@@ -13,7 +13,22 @@
     <script src="~/Scripts/angularjs/finance2.js"></script>
     <script src="~/Scripts/angularjs/invoice2.js"></script>
     <script src="~/Scripts/custom/machinedetail.js"></script>
-    <h3>@ViewBag.MachineName</h3>
+    <style>
+        ul li .list-group {
+            list-style: none;
+            padding-left: 0;
+            margin-bottom: 5px;
+        }
+
+        .list-group-item {
+            border: none;
+            padding-bottom: 5px;
+        }
+        .serialtext
+        {
+            font-size: 10px;
+        }
+    </style>
     <div id='spinner' class='spinner'></div>
 
     <div class="row">
@@ -23,31 +38,152 @@
             </div>
             <div ng-app="machinedetail" class="col-lg-9">
                 <div class="col-lg-12" ng-controller="MachineDetailController">
+                    <h3 ng-model="machinenametest">@ViewBag.MachineName</h3>
                     <h2>Machine: {{ machinename }}</h2><br />
-
-                    <div class="col-md-6">
-                        <ul>
-                            <li>{{ description }}</li>
-                            <li>
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="col-lg-5">
+                                <text>{{ description }}</text>
+                            </div>
+                            <div class="col-lg-7">
+                                <text>Current Status: {{ status }}<text ng-if="leaseuser">, lease to {{ leaseuser }}</text></text><br />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="col-lg-5">
                                 <ul>
                                     <li>{{ sockets }} sockets, {{ cores }} cores, {{ cpus }} logical processors</li>
                                     <li>{{ memory }} Memory</li>
-                                    <li>{{ diskno }} #Disk</li>
+                                    <li>#{{ diskno }} Disk</li>
                                     <li>Disk 1: {{ disk1 }}</li>
                                     <li ng-if="disk2">Disk2 : {{ disk2 }}</li>
                                 </ul>
-                            </li>
-                        </ul>
+                            </div>
+                            <div class="col-lg-7">
+                                <text>Power Status: {{ powerstatus }}</text><br />
+                                <text>
+                                    The last job to run was <a href="#" data-toggle="modal" data-target="#myModal">{{ lastjob }}</a> ({{ jobbreif }}) <a href="#" data-toggle="modal" data-target="#myModal2">History</a>
+                                </text>
+                                <div myjobhistory></div>
+                            </div>
+                            <div id="myModal1" class="modal fade" role="dialog">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-body">
+                                            <p>Job</p>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div id="myModal2" class="modal fade" role="dialog">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-body">
+                                            <p>Some text in the modal.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-md-6">
-                        <text>Current Stauts: {{ status }}<text ng-if="leaseuser">, lease to {{ leaseuser }}</text></text><br />
-                        <text>Power Status: {{ powerstatus }}</text>
-                        <text>The last job to run was {{ lastjob }} ( {{ jobbreif }})  </text>
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="col-lg-5">
+                                <ul class="list-group" style="list-style: none;">
+                                    <li ng-if="status === 'leased'" class="list-group-item">
+                                        <button type="button" class="btn btn-default" data-toggle="modal" data-target="#borrowmachineModal"><i class="glyphicon glyphicon-user"></i>  Return Machines</button>
+                                    </li>
+
+                                    <li ng-if="status === 'idle'" class="list-group-item">
+                                        <button type="button" class="btn btn-default" ng-click="borrowmachine()"><i class="glyphicon glyphicon-user"></i>  Borrow Machines</button>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <button type="button" class="btn btn-default" ng-click="openracktables()"><i class="glyphicon glyphicon-th-list"></i>  Open in RackTables (CITRITE)</button>
+                                    </li>
+
+                                    <li class="list-group-item">
+                                        <button type="button" class="btn btn-default" data-toggle="modal" data-target="#serialportModal"><i class="glyphicon glyphicon-hdd"></i>  Open Serial Connection</button>
+                                    </li>
+
+
+                                </ul>
+
+                            </div>
+                            <div id="borrowmachineModal" class="modal fade" role="dialog">
+                                <div class="modal-dialog">
+
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                            <h4 class="modal-title">Borrowing Options</h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            <form role="form" ng-submit="borrowmachine()">
+                                                <div class="form-group">
+                                                    <label for="reason" ng-model="reason">Reason:</label>
+                                                    <input type="text" class="form-control" id="reason">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="duration">Duration:</label>
+                                                    <select id="duration" ng-model="duration">
+                                                        <option>1 hours</option>
+                                                        <option>2 hours</option>
+                                                        <option>3 hours</option>
+                                                        <option>4 hours</option>
+                                                    </select>
+                                                </div>
+                                                <button type="submit" class="btn btn-default">Submit</button>
+                                                <button type="submit" class="btn btn-default">Cancel</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="serialportModal" class="modal fade" role="dialog">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-body">
+                                            <div serialport></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6">
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <div class="col-lg-4">
+                                            <button type="button" class="btn btn-default" ng-click="powercycle()" ng-disabled="powerstatus != 'on'">Power Cycle</button>
+                                        </div>
+                                        <div class="col-lg-4">
+                                            <button type="button" class="btn btn-default" ng-click="poweron()" ng-disabled="powerstatus == 'on'">Power On</button>
+                                        </div>
+                                        <div class="col-lg-4">
+                                            <button type="button" class="btn btn-default" ng-click="poweroff()" ng-disabled="powerstatus != 'on'">Power Off</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <br />
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <button type="button" class="btn btn-default" ng-click="installos()">Install HyperVisor or OS</button>
+                                    </div>
+                                </div>
+
+
+
+                            </div>
+                        </div>
                     </div>
+
+
+
+
                 </div>
             </div>
-
-
         </div>
     </div>
 

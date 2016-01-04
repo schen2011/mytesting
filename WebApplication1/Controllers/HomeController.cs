@@ -17,6 +17,9 @@ namespace WebApplication1.Controllers
 {
     public class HomeController : Controller
     {
+
+        string powerurlconst = "https://xenrt.citrite.net:443/xenrt/api/v2/machine/{machinename}/power";
+
         public async Task<ActionResult> Index()
         {
             /*
@@ -139,6 +142,97 @@ namespace WebApplication1.Controllers
                 }
             }
             return null;
+        }
+
+        public void PowerOn(string id)
+        {
+            if (!String.IsNullOrEmpty(id))
+            {
+                StringBuilder st = new StringBuilder(powerurlconst);
+                st.Replace("{machinename}", id);
+                powerurlconst = st.ToString();
+
+                HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(powerurlconst);
+                httpWebRequest.ContentType = "application/json";
+                httpWebRequest.Headers.Add("X-Api-Key", "mx0hbgN97TSqTO/OxaAVuHtH+WpMoGbs5j71+g");
+                httpWebRequest.Method = "POST";
+                httpWebRequest.Timeout = 20000;
+                using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+                {
+                    string json = new JavaScriptSerializer().Serialize(new
+                    {
+                        operation = "on"
+                    });
+
+                    streamWriter.Write(json);
+                }
+
+                using (var response = (HttpWebResponse)httpWebRequest.GetResponse())
+                {
+
+                }
+            }
+        }
+
+        public void PowerOff(string id)
+        {
+            if (!String.IsNullOrEmpty(id))
+            {
+                StringBuilder st = new StringBuilder(powerurlconst);
+                st.Replace("{machinename}", id);
+                powerurlconst = st.ToString();
+
+                HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(powerurlconst);
+                httpWebRequest.ContentType = "application/json";
+                httpWebRequest.Headers.Add("X-Api-Key", "mx0hbgN97TSqTO/OxaAVuHtH+WpMoGbs5j71+g");
+                httpWebRequest.Method = "POST";
+                httpWebRequest.Timeout = 20000;
+                using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+                {
+                    string json = new JavaScriptSerializer().Serialize(new
+                    {
+                        operation = "off"
+                    });
+
+                    streamWriter.Write(json);
+                }
+
+                using (var response = (HttpWebResponse)httpWebRequest.GetResponse())
+                {
+
+                }
+            }
+        }
+
+
+        public void PowerCycle(string id)
+        {
+            if (!String.IsNullOrEmpty(id))
+            {
+                StringBuilder st = new StringBuilder(powerurlconst);
+                st.Replace("{machinename}", id);
+                powerurlconst = st.ToString();
+
+                HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(powerurlconst);
+                httpWebRequest.ContentType = "application/json";
+                httpWebRequest.Headers.Add("X-Api-Key", "mx0hbgN97TSqTO/OxaAVuHtH+WpMoGbs5j71+g");
+                httpWebRequest.Method = "POST";
+                httpWebRequest.Timeout = 20000;
+                using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+                {
+                    string json = new JavaScriptSerializer().Serialize(new
+                    {
+                        operation = "reboot"
+                    });
+
+                    streamWriter.Write(json);
+                }
+
+                using (var response = (HttpWebResponse)httpWebRequest.GetResponse())
+                {
+
+                }
+            }
         }
 
         public string GetJobHistroies(string id)
