@@ -38,7 +38,7 @@
             </div>
             <div ng-app="machinedetail" class="col-lg-9">
                 <div class="col-lg-12" ng-controller="MachineDetailController">
-                    <h3 ng-model="machinenametest">@ViewBag.MachineName</h3>
+                    <h3 id="machinenametest">@ViewBag.MachineName</h3>
                     <h2>Machine: {{ machinename }}</h2><br />
                     <div class="row">
                         <div class="col-lg-12">
@@ -66,7 +66,6 @@
                                 <text>
                                     The last job to run was <a href="#" data-toggle="modal" data-target="#myModal">{{ lastjob }}</a> ({{ jobbreif }}) <a href="#" data-toggle="modal" data-target="#myModal2">History</a>
                                 </text>
-                                <div myjobhistory></div>
                             </div>
                             <div id="myModal1" class="modal fade" role="dialog">
                                 <div class="modal-dialog">
@@ -94,11 +93,11 @@
                             <div class="col-lg-5">
                                 <ul class="list-group" style="list-style: none;">
                                     <li ng-if="status === 'leased'" class="list-group-item">
-                                        <button type="button" class="btn btn-default" data-toggle="modal" data-target="#borrowmachineModal"><i class="glyphicon glyphicon-user"></i>  Return Machines</button>
+                                        <button type="button" class="btn btn-default" data-toggle="modal" data-target="#returnmachineModal"><i class="glyphicon glyphicon-user"></i>  Return Machines</button>
                                     </li>
 
                                     <li ng-if="status === 'idle'" class="list-group-item">
-                                        <button type="button" class="btn btn-default" ng-click="borrowmachine()"><i class="glyphicon glyphicon-user"></i>  Borrow Machines</button>
+                                        <button type="button" class="btn btn-default" data-toggle="modal" data-target="#borrowmachineModal"><i class="glyphicon glyphicon-user"></i>  Borrow Machines</button>
                                     </li>
                                     <li class="list-group-item">
                                         <button type="button" class="btn btn-default" ng-click="openracktables()"><i class="glyphicon glyphicon-th-list"></i>  Open in RackTables (CITRITE)</button>
@@ -123,19 +122,35 @@
                                         <div class="modal-body">
                                             <form role="form" ng-submit="borrowmachine()">
                                                 <div class="form-group">
-                                                    <label for="reason" ng-model="reason">Reason:</label>
-                                                    <input type="text" class="form-control" id="reason">
+                                                    <label for="reason">Reason:</label>
+                                                    <input type="text" class="form-control" id="reason" name="reason" ng-model="reason">
                                                 </div>
                                                 <div class="form-group">
                                                     <label for="duration">Duration:</label>
-                                                    <select id="duration" ng-model="duration">
-                                                        <option>1 hours</option>
-                                                        <option>2 hours</option>
-                                                        <option>3 hours</option>
-                                                        <option>4 hours</option>
+                                                    <select id="duration" ng-model="duration" name="duration">
+                                                        <option value="1">1 hours</option>
+                                                        <option value="2">2 hours</option>
+                                                        <option value="3">3 hours</option>
+                                                        <option value="4">4 hours</option>
                                                     </select>
                                                 </div>
                                                 <button type="submit" class="btn btn-default">Submit</button>
+                                                <button type="submit" class="btn btn-default">Cancel</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="returnmachineModal" class="modal fade" role="dialog">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                            <h4 class="modal-title">Return Machine {{ machinename }}</h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            <form role="form" ng-submit="returnmachine()">
+                                                <button type="submit" class="btn btn-default">Confirm</button>
                                                 <button type="submit" class="btn btn-default">Cancel</button>
                                             </form>
                                         </div>
