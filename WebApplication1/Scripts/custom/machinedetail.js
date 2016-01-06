@@ -13,19 +13,21 @@ var poweroffcontrollerurl = "../../Home/PowerOff";
 var powercyclecontrollerurl = "../../Home/PowerCycle";
 var borrowmachineurl = "../../Home/BorrowMachine";
 var returnmachineurl = "../../Home/ReturnMachine";
+var extendmachineurl = "../../Home/ExtendMachine";
 
 var mpp = angular.module('machinedetail', []);
 mpp.controller('MachineDetailController', ['$scope', '$http', function ($scope, $http) {
 
     var machinenametest = $('#machinenametest').html()
 
+    //get machine details
     $http({
         method: 'GET',
         url: machineapiurl,
         params: { "id": machinenametest },
     }).success(function (data, status) {
-        console.log("call success");
         $scope.machinename = _.first(_.pluck(data, "name"));
+        $scope.machinenamedisplay = _.first(_.pluck(data, "name")) + '.xenrt.citrite.net';
         $scope.description = _.first(_.pluck(data, "description")) == null ? "no description" : _.first(_.pluck(data, "description"));
         var resoucelist = _.pluck(data, "resources");
         $scope.sockets = _.first(_.pluck(resoucelist, "sockets"));
@@ -45,7 +47,7 @@ mpp.controller('MachineDetailController', ['$scope', '$http', function ($scope, 
         console.log("please check your api");
     });
 
-
+    //get power status
     $http({
         method: 'GET',
         url: getpowerstatusurl,
@@ -56,13 +58,14 @@ mpp.controller('MachineDetailController', ['$scope', '$http', function ($scope, 
         console.log("error is" + status);
     });
 
-
+    //get job history
     $http({
         method: 'GET',
         url: getjobhistoryurl,
         params: { "id": machinenametest },
     }).success(function (data, status) {
-        console.log("get job history success");
+        $scope.jobhistory = data;
+        buildjobhistorytable(data);
         $scope.lastjob = _.last(_.pluck(data, "id"));
         $scope.jobbreif = _.last(_.pluck(data, "description"));
         $scope.job = {
@@ -73,6 +76,7 @@ mpp.controller('MachineDetailController', ['$scope', '$http', function ($scope, 
         console.log("error is" + status);
     });
 
+    //return machine
     $scope.returnmachine = function () {
         $.post(returnmachineurl, { "machineid": $scope.machinename }, function (data, status) {
             if ("success" == status) {
@@ -92,6 +96,18 @@ mpp.controller('MachineDetailController', ['$scope', '$http', function ($scope, 
             }
         });
     };
+
+    $scope.extendmachine = function () {
+        $scope.reason = this.reason;
+        $scope.duration = this.duration;
+        $.post(extendmachineurl, { "machineid": $scope.machinename, "reason": $scope.reason, "duration": $scope.duration }, function (data, status) {
+            if ("success" == status) {
+                window.location.reload(true);
+            }
+        });
+    };
+
+
 
 
     $scope.openracktables = function () {
@@ -123,7 +139,80 @@ mpp.controller('MachineDetailController', ['$scope', '$http', function ($scope, 
         });
     };
 
+    var buildjobhistorytable = function (inputs) {
 
+        var input = [];
+        _.forEach(inputs, function (data, key) {
+            var eachinput = [];
+            eachinput.push(data.id);
+            eachinput.push(data.user);
+            eachinput.push(data.description);
+            eachinput.push(data.result);
+            eachinput.push(data.status);
+            eachinput.push(data.logUrl);
+            input.push(eachinput);
+        });
+
+        //ROW
+        //0. jobid
+        //1. user
+        //2. description
+        //3. result
+        //4. status
+        //5. logUrl
+
+        var dt = $('#jobhistorytab').DataTable({
+            'processing': true,
+            data: input,
+            rowId: 0,
+            "order": [[1, "asc"]],
+            "columns": [
+                {
+                    title: "JobId",
+                    className: 'employeevisit'
+                },
+                {
+                    title: "User",
+                    className: 'visitedtime'
+                },
+                {
+                    title: "Description",
+                    className: 'visitedtime'
+                },
+                {
+                    title: "Result",
+                    className: 'employeevisit'
+                },
+                {
+                    title: "Status",
+                    className: 'visitedtime'
+                },
+                {
+                    title: "Detail",
+                    //data: null,
+                    className: "center"
+                }
+            ],
+            "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
+                if (aData[3] == "ERROR")
+                {
+                    $('td', nRow).css('background-color', 'Red');
+                }
+            },
+            "columnDefs": [
+            {
+                "render": function (data, type, row) {
+                    if (!_.isNull(row[5])) {
+                        var logurl = row[5];
+                        return '<a href="' + logurl + '" class="btn btn-info">Log</a>';
+                    }
+                    else
+                        return "No Log";
+                },
+                "targets": 5
+            }],
+        });
+    }
 
 }])
 

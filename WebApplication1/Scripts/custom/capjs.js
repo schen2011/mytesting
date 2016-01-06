@@ -42,7 +42,7 @@
 
         var obj = _.keys(tt);
 
-        var totalarr = new Array();
+        var totalarr = [];
         for (var i = 0; i < _.size(obj) ; i++) {
             var objarr = new Array();
 

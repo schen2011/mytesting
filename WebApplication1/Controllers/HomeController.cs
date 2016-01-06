@@ -47,6 +47,11 @@ namespace WebApplication1.Controllers
             //        ViewData["machinelist"] = obj;
             //    }
             //}
+            
+            //Get API key
+            //var name = HttpContext.User.Identity.Name;
+            //GetAPIkey();
+            var name = System.Web.HttpContext.Current.User.Identity.Name;
             return View();
         }
 
@@ -168,11 +173,27 @@ namespace WebApplication1.Controllers
                     streamWriter.Write(json);
                 }
 
+               
+
                 using (var response = (HttpWebResponse)httpWebRequest.GetResponse())
                 {
 
                 }
             }
+        }
+
+        public void GetAPIkey()
+        {
+            var url = "https://xenrt.citrite.net/xenrt/api/v2/apikey";
+            HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+            httpWebRequest.ContentType = "application/json";
+            httpWebRequest.Method = "GET";
+
+            using (var response = (HttpWebResponse)httpWebRequest.GetResponse())
+            {
+
+            }
+
         }
 
 
@@ -187,6 +208,8 @@ namespace WebApplication1.Controllers
                 HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(borrowmachineconst);
                 httpWebRequest.ContentType = "application/json";
                 httpWebRequest.Headers.Add("X-Api-Key", "mx0hbgN97TSqTO/OxaAVuHtH+WpMoGbs5j71+g");
+                //httpWebRequest.Headers.Add("Authorization", "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes(string.Format("{0}:{1}", _username, _password))));
+
                 httpWebRequest.Method = "POST";
                 httpWebRequest.Timeout = 20000;
                 using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
@@ -207,6 +230,13 @@ namespace WebApplication1.Controllers
             }
         }
 
+        public void SetBasicAuthHeader(WebRequest request, String userName, String userPassword)
+        {
+            string authInfo = userName + ":" + userPassword;
+            authInfo = Convert.ToBase64String(Encoding.Default.GetBytes(authInfo));
+            request.Headers["Authorization"] = "Basic " + authInfo;
+        }
+
         public void ReturnMachine(string machineid)
         {
             if (!String.IsNullOrEmpty(machineid))
@@ -218,6 +248,8 @@ namespace WebApplication1.Controllers
                 HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(borrowmachineconst);
                 httpWebRequest.ContentType = "application/json";
                 httpWebRequest.Headers.Add("X-Api-Key", "mx0hbgN97TSqTO/OxaAVuHtH+WpMoGbs5j71+g");
+                //SetBasicAuthHeader(httpWebRequest, userName, password);
+
                 httpWebRequest.Method = "DELETE";
                 httpWebRequest.Timeout = 20000;
                 using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
@@ -236,6 +268,41 @@ namespace WebApplication1.Controllers
                 }
             }
         }
+
+        public void ExtendMachine(string machineid, string reason, string duration)
+        {
+            if (!String.IsNullOrEmpty(machineid))
+            {
+                StringBuilder st = new StringBuilder(borrowmachineconst);
+                st.Replace("{machinename}", machineid);
+                borrowmachineconst = st.ToString();
+
+                HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(borrowmachineconst);
+                httpWebRequest.ContentType = "application/json";
+                httpWebRequest.Headers.Add("X-Api-Key", "mx0hbgN97TSqTO/OxaAVuHtH+WpMoGbs5j71+g");
+                httpWebRequest.Method = "POST";
+                httpWebRequest.Timeout = 20000;
+                using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+                {
+                    string json = new JavaScriptSerializer().Serialize(new
+                    {
+                        duration = Convert.ToInt32(duration),
+                        reason = reason,
+                        force = true
+                    });
+
+                    streamWriter.Write(json);
+                }
+
+                using (var response = (HttpWebResponse)httpWebRequest.GetResponse())
+                {
+
+                }
+            }
+        }
+
+
+
 
         public void PowerOff(string id)
         {
